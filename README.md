@@ -8,14 +8,20 @@ your collection and export it to **CSV** or **JSON** anytime.
 ## What it saves
 
 For each game: title, slug, page URL, rating, release date, popularity ranking, developer,
-publisher, genres, tags, up-to-date/out-of-date status, the torrent magnet link, the game
-download-host links (FileQ, Transfer.it, FileDitch, 1fichier, …) with filenames, the **extra**
-download-host links (manuals, wallpapers, soundtracks, …) kept separately, the installer files
-with sizes, the extra files with sizes, the cover image URL, and a saved-at timestamp.
+publisher, genres, tags, up-to-date/out-of-date status, version details (current version,
+latest version, last checked) and the GOGDB link, the torrent magnet link, the game / patch /
+extra download-host links (FileQ, Transfer.it, FileDitch, 1fichier, …) with filenames, the
+installer files with sizes, the extra files with sizes, the cover image URL, and a saved-at
+timestamp.
 
-Game links vs. extra links are split into separate fields (`downloadLinks` / `extraDownloadLinks`
-and `installers` / `extras`), matching the site's own "GAME DOWNLOAD LINKS" / "EXTRA DOWNLOAD
-LINKS" sections.
+Download links are split into separate fields by the site's own sections —
+`downloadLinks` (GAME DOWNLOAD LINKS), `patchDownloadLinks` (PATCH DOWNLOAD LINKS),
+`extraDownloadLinks` (EXTRA DOWNLOAD LINKS) — and likewise `installers` (GAME INSTALLERS) vs.
+`extras` (EXTRAS).
+
+The version panel (current/latest version, last checked) is only rendered by the site when its
+status badge is clicked, so the Save button briefly expands that badge to read it, then collapses
+it again. This adds a fraction of a second to each save.
 
 Games are deduplicated by their URL slug — re-saving a game updates its entry.
 

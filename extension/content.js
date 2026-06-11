@@ -73,16 +73,64 @@
     });
   }
 
-  function scrapeGame(root) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Current/Latest Version and Last Checked live in a panel that the site only
+  // renders after the status badge is clicked. Expand it, read it, then collapse
+  // it again so the page is left as we found it.
+  async function readVersionInfo(root) {
+    const labels = ["Current Version", "Latest Version", "Last Checked"];
+    const isOpen = () => labels.some((l) => root.textContent.includes(l));
+
+    // The clickable badge is the smallest element whose text starts with the
+    // status word (the inner badge, not its outer wrapper).
+    const badge = [...root.querySelectorAll("div, span, button")]
+      .filter((n) => /^(Up-to-date|Out-of-date)/.test(text(n)))
+      .sort((a, b) => text(a).length - text(b).length)[0];
+
+    let openedByUs = false;
+    if (!isOpen() && badge) {
+      badge.click();
+      openedByUs = true;
+      for (let i = 0; i < 20 && !isOpen(); i++) await sleep(40); // wait for render
+    }
+
+    // Each row is a label cell + a value cell; read the value next to the label.
+    const readRow = (label) => {
+      const cell = [...root.querySelectorAll("*")].find(
+        (n) => n.children.length === 0 && text(n) === label
+      );
+      if (!cell) return "";
+      if (cell.nextElementSibling && text(cell.nextElementSibling))
+        return text(cell.nextElementSibling);
+      const row = cell.parentElement;
+      if (row && row.lastElementChild && row.lastElementChild !== cell)
+        return text(row.lastElementChild);
+      return "";
+    };
+    const info = {
+      currentVersion: readRow("Current Version"),
+      latestVersion: readRow("Latest Version"),
+      lastChecked: readRow("Last Checked"),
+    };
+
+    if (openedByUs && badge) badge.click(); // collapse
+    return info;
+  }
+
+  async function scrapeGame(root) {
     const downloadLinks = parseAccordion(sectionByHeading(root, "GAME DOWNLOAD LINKS"));
+    const patchDownloadLinks = parseAccordion(sectionByHeading(root, "PATCH DOWNLOAD LINKS"));
     const extraDownloadLinks = parseAccordion(sectionByHeading(root, "EXTRA DOWNLOAD LINKS"));
     const installers = parseFileList(sectionByHeading(root, "GAME INSTALLERS"));
     const extras = parseFileList(sectionByHeading(root, "EXTRAS"));
 
     // Status badge text ("Out-of-date" / "Up-to-date") only appears in the badge.
     const statusMatch = root.textContent.match(/Out-of-date|Up-to-date/);
+    const version = await readVersionInfo(root);
 
     const torrentEl = root.querySelector('a[href^="magnet:"]');
+    const gogdbEl = root.querySelector('a[href*="gogdb.org"]');
     const ogImage = document.querySelector('meta[property="og:image"]');
     const metaDesc = document.querySelector('meta[name="description"]');
 
@@ -98,8 +146,13 @@
       genres: listByTitle(root, "Genres"),
       tags: listByTitle(root, "Tags"),
       status: statusMatch ? statusMatch[0] : "",
+      currentVersion: version.currentVersion,
+      latestVersion: version.latestVersion,
+      lastChecked: version.lastChecked,
+      gogdbUrl: gogdbEl ? gogdbEl.href : "",
       torrent: torrentEl ? torrentEl.href : "",
       downloadLinks,
+      patchDownloadLinks,
       extraDownloadLinks,
       installers,
       extras,
@@ -141,7 +194,8 @@
       const root = document.querySelector(".game-info");
       if (!root) return;
       try {
-        const game = scrapeGame(root);
+        btn.textContent = "… saving";
+        const game = await scrapeGame(root);
         const count = await saveGame(game);
         btn.textContent = `✓ Saved (${count} total)`;
         btn.classList.add("ggs-saved");

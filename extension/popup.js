@@ -84,9 +84,10 @@
   function toCsv(games) {
     const cols = [
       "title", "slug", "url", "rating", "releaseDate", "ranking",
-      "developer", "publisher", "genres", "tags", "status", "torrent",
-      "downloadLinks", "extraDownloadLinks", "installers", "extras",
-      "coverImage", "savedAt",
+      "developer", "publisher", "genres", "tags", "status",
+      "currentVersion", "latestVersion", "lastChecked", "gogdbUrl", "torrent",
+      "downloadLinks", "patchDownloadLinks", "extraDownloadLinks",
+      "installers", "extras", "coverImage", "savedAt",
     ];
     const rows = [cols.join(",")];
     for (const g of Object.values(games)) {
@@ -95,6 +96,7 @@
         genres: (g.genres || []).join("; "),
         tags: (g.tags || []).join("; "),
         downloadLinks: flattenLinks(g.downloadLinks),
+        patchDownloadLinks: flattenLinks(g.patchDownloadLinks),
         extraDownloadLinks: flattenLinks(g.extraDownloadLinks),
         installers: flattenFiles(g.installers),
         extras: flattenFiles(g.extras),
