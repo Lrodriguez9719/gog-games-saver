@@ -1,0 +1,101 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  width: 380px;
+  margin: 0;
+  padding: 12px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #1e1e1e;
+  color: #eee;
+  font-size: 13px;
+}
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+h1 {
+  font-size: 15px;
+  margin: 0;
+}
+.count {
+  color: #a78bfa;
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.btn {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  border-radius: 5px;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover {
+  filter: brightness(1.12);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-danger {
+  background: #b91c1c;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+}
+.btn-danger.armed {
+  background: #f59e0b;
+  color: #1e1e1e;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 5px;
+}
+.list li:nth-child(odd) {
+  background: #262626;
+}
+.game-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-meta {
+  color: #888;
+  font-size: 11px;
+}
+.remove {
+  border: none;
+  background: transparent;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+}
+.empty {
+  color: #888;
+  text-align: center;
+  padding: 18px 8px;
+}
+.hidden {
+  display: none;
+}

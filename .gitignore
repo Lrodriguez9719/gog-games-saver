@@ -1,0 +1,13 @@
+# Local dev: saved page snapshots used to build/test the scraper.
+# Large, and they're gog-games.to's content — not ours to redistribute.
+/*.html
+/*_files/
+
+# Personal exported collections
+/gog-games-*.csv
+/gog-games-*.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
