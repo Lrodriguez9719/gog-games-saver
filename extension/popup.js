@@ -85,7 +85,7 @@
     const cols = [
       "title", "slug", "url", "rating", "releaseDate", "ranking",
       "developer", "publisher", "genres", "tags", "status",
-      "currentVersion", "latestVersion", "lastChecked", "gogdbUrl", "torrent",
+      "currentVersion", "latestVersion", "lastChecked", "gogUrl", "gogdbUrl", "torrent",
       "downloadLinks", "patchDownloadLinks", "extraDownloadLinks",
       "installers", "extras", "coverImage", "savedAt",
     ];

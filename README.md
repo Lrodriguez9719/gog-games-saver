@@ -33,6 +33,10 @@ extension/
   content.js      # injects the Save button + scrapes the page
   content.css     # button styling
   popup.html/.css/.js  # collection list + CSV/JSON export
+viewer/           # standalone offline viewer for your exported JSON
+  index.html
+  styles.css
+  app.js
 ```
 
 ## Install
@@ -58,10 +62,24 @@ extension/
 3. Click the extension's toolbar icon to open the popup: review/remove entries, or hit
    **Export CSV** / **Export JSON**. Clearing the list asks for confirmation first.
 
+## Viewer (browse your saved JSON)
+
+`viewer/` is a tiny standalone web page — no install, no server, no Node/Python — for browsing
+a collection you exported as JSON. Open `viewer/index.html` in your browser, then **drag your
+exported JSON onto the page** (or click *Load JSON…* and pick it). You get a searchable,
+filterable, sortable grid of cards; click any game for the full details (all download/patch/extra
+links with copy buttons, installers, extras, torrent, and GOG/GOGDB links).
+
+- Works fully offline by just opening the file. Browsers block local-file `fetch()`, so the
+  drag/pick method is how you load data from disk — no renaming required.
+- The last file you loaded is remembered (via `localStorage`), so reopening the page restores it.
+- If you instead **serve** the folder over HTTP (e.g. GitHub Pages), a file named
+  `database.json` next to `index.html` loads automatically.
+
 ## Notes
 - CSV is flattened for spreadsheets (lists joined with `;`, download links as
   `Host: url || Host: url`). JSON keeps the full nested structure — use it if you want every
-  individual link/installer cleanly. Exporting both is recommended.
+  individual link/installer cleanly. Exporting both is recommended. The viewer uses JSON.
 - The only permission used is `storage`. Exports are generated locally in the browser; no
   data is sent anywhere.
 - Selectors were validated against a real saved page; if the site markup changes the

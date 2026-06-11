@@ -75,37 +75,77 @@
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // Current/Latest Version and Last Checked live in a panel that the site only
-  // renders after the status badge is clicked. Expand it, read it, then collapse
-  // it again so the page is left as we found it.
+  // Dispatch a pointer/mouse event React will recognise (it delegates the
+  // over/out variants to implement onMouseEnter/onMouseLeave).
+  function fireMouse(el, type, bubbles) {
+    const Evt =
+      type.startsWith("pointer") && typeof PointerEvent === "function"
+        ? PointerEvent
+        : MouseEvent;
+    el.dispatchEvent(
+      new Evt(type, { bubbles, cancelable: true, view: window, pointerType: "mouse" })
+    );
+  }
+  const hover = (el) =>
+    ["pointerover", "pointerenter", "mouseover", "mouseenter"].forEach((t) =>
+      fireMouse(el, t, t.endsWith("over"))
+    );
+  const unhover = (el) =>
+    ["pointerout", "pointerleave", "mouseout", "mouseleave"].forEach((t) =>
+      fireMouse(el, t, t.endsWith("out"))
+    );
+
+  // Current/Latest Version and Last Checked live in a popover the site mounts
+  // when the status badge is clicked (and unmounts when the popover is left).
+  // Click it open, read it, then close it again to restore the page.
   async function readVersionInfo(root) {
-    const labels = ["Current Version", "Latest Version", "Last Checked"];
-    const isOpen = () => labels.some((l) => root.textContent.includes(l));
+    const empty = { currentVersion: "", latestVersion: "", lastChecked: "" };
 
-    // The clickable badge is the smallest element whose text starts with the
-    // status word (the inner badge, not its outer wrapper).
-    const badge = [...root.querySelectorAll("div, span, button")]
-      .filter((n) => /^(Up-to-date|Out-of-date)/.test(text(n)))
-      .sort((a, b) => text(a).length - text(b).length)[0];
+    // The popover shares the .shadow-lg.drop-shadow-lg class with the "More"
+    // links menu, so identify it by the one containing the version labels.
+    const findPanel = () =>
+      [...document.querySelectorAll(".shadow-lg.drop-shadow-lg")].find((el) =>
+        el.textContent.includes("Current Version")
+      );
 
+    // The clickable badge: among elements whose text starts with the status
+    // word, the wrapper and the inner badge are identical, but the click
+    // handler sits on the inner one. Prefer the element with cursor:pointer,
+    // else the deepest (most nested) candidate.
+    const depth = (el) => {
+      let d = 0;
+      for (let n = el; n; n = n.parentElement) d++;
+      return d;
+    };
+    const candidates = [...root.querySelectorAll("div, span, button")].filter((n) =>
+      /^(Up-to-date|Out-of-date)/.test(text(n))
+    );
+    const badge =
+      candidates.find((n) => n.style && n.style.cursor === "pointer") ||
+      candidates.sort((a, b) => depth(b) - depth(a))[0];
+    if (!badge) return empty;
+
+    let panel = findPanel();
     let openedByUs = false;
-    if (!isOpen() && badge) {
-      badge.click();
-      openedByUs = true;
-      for (let i = 0; i < 20 && !isOpen(); i++) await sleep(40); // wait for render
-    }
 
-    // Each row is a label cell + a value cell; read the value next to the label.
+    if (!panel) {
+      badge.click(); // open
+      openedByUs = true;
+      for (let i = 0; i < 25 && !(panel = findPanel()); i++) await sleep(30);
+      if (!panel) {
+        // Fallback: some badges may be hover-driven instead.
+        [badge, badge.parentElement].filter(Boolean).forEach(hover);
+        for (let i = 0; i < 15 && !(panel = findPanel()); i++) await sleep(30);
+      }
+    }
+    if (!panel) return empty;
+
+    // Each row: <div class="flex items-center"><span>Label</span><span>Value</span></div>
     const readRow = (label) => {
-      const cell = [...root.querySelectorAll("*")].find(
+      const cell = [...panel.querySelectorAll("*")].find(
         (n) => n.children.length === 0 && text(n) === label
       );
-      if (!cell) return "";
-      if (cell.nextElementSibling && text(cell.nextElementSibling))
-        return text(cell.nextElementSibling);
-      const row = cell.parentElement;
-      if (row && row.lastElementChild && row.lastElementChild !== cell)
-        return text(row.lastElementChild);
+      if (cell && cell.nextElementSibling) return text(cell.nextElementSibling);
       return "";
     };
     const info = {
@@ -114,7 +154,12 @@
       lastChecked: readRow("Last Checked"),
     };
 
-    if (openedByUs && badge) badge.click(); // collapse
+    // Close it again: the popover closes on mouse-leave, so dispatch that;
+    // also click the badge once more in case it toggles.
+    if (openedByUs) {
+      unhover(panel);
+      badge.click();
+    }
     return info;
   }
 
@@ -131,6 +176,7 @@
 
     const torrentEl = root.querySelector('a[href^="magnet:"]');
     const gogdbEl = root.querySelector('a[href*="gogdb.org"]');
+    const gogEl = root.querySelector('a[href*="gog.com/game"]');
     const ogImage = document.querySelector('meta[property="og:image"]');
     const metaDesc = document.querySelector('meta[name="description"]');
 
@@ -149,6 +195,7 @@
       currentVersion: version.currentVersion,
       latestVersion: version.latestVersion,
       lastChecked: version.lastChecked,
+      gogUrl: gogEl ? gogEl.href : "",
       gogdbUrl: gogdbEl ? gogdbEl.href : "",
       torrent: torrentEl ? torrentEl.href : "",
       downloadLinks,

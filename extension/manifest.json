@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GOG Games Saver",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Save game info (title, tags, torrent + download links, installers, etc.) from gog-games.to and export it to CSV/JSON.",
   "permissions": ["storage", "unlimitedStorage"],
   "host_permissions": ["https://gog-games.to/*"],

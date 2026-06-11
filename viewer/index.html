@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GOG Games — Saved Library</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">GG</span>
+        <div>
+          <h1>Saved Library</h1>
+          <span id="count" class="count">no games loaded</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="search" type="search" placeholder="Search title, developer, tag…" autocomplete="off" />
+        <select id="status-filter" title="Filter by status">
+          <option value="">All statuses</option>
+          <option value="Up-to-date">Up-to-date</option>
+          <option value="Out-of-date">Out-of-date</option>
+        </select>
+        <select id="sort" title="Sort">
+          <option value="saved-desc">Recently saved</option>
+          <option value="title-asc">Title A–Z</option>
+          <option value="rating-desc">Rating ↓</option>
+          <option value="release-desc">Release date ↓</option>
+        </select>
+        <button id="load-btn" class="btn">Load JSON…</button>
+        <button id="clear-btn" class="btn ghost" hidden>Clear</button>
+        <input id="file-input" type="file" accept="application/json,.json" hidden />
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="empty" class="empty">
+        <div class="empty-card">
+          <h2>Load your saved games</h2>
+          <p>
+            <strong>Drag your exported JSON anywhere onto this page</strong>, or click
+            <em>Load JSON…</em> above and pick the file you exported from the GOG Games Saver
+            extension.
+          </p>
+          <p class="muted">
+            Tip: if you serve this folder over HTTP (or GitHub Pages), a file named
+            <code>database.json</code> next to this page loads automatically. Opening the file
+            directly from disk needs the drag/pick method (browsers block local file reads).
+          </p>
+        </div>
+      </section>
+
+      <section id="grid" class="grid" hidden></section>
+      <p id="no-results" class="empty muted" hidden>No games match your filters.</p>
+    </main>
+
+    <div id="drop-overlay" class="drop-overlay" hidden><div>Drop JSON to load</div></div>
+
+    <div id="modal" class="modal" hidden>
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-body" role="dialog" aria-modal="true"></div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
