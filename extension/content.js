@@ -163,6 +163,35 @@
     return info;
   }
 
+  // The cover art is injected as a <style> rule for .game-info-bg-img that lives
+  // inside THIS modal's wrapper (the parent of .game-info). We must read it from
+  // that scoped <style> — not getComputedStyle — because the .game-info-bg-img
+  // class is global and collides across games as you browse the SPA, so the
+  // computed value would be some other game's cover.
+  const COVER_RE = /\.game-info-bg-img\s*\{[^}]*background-image:\s*url\(["']?(.*?)["']?\)/i;
+  function getCoverImage(root) {
+    // Tightest ancestor that actually contains this game's background element.
+    let scope = root.parentElement;
+    for (let n = root.parentElement; n; n = n.parentElement) {
+      if (n.querySelector(".game-info-bg-img")) {
+        scope = n;
+        break;
+      }
+    }
+    if (scope) {
+      // If the wrapper ever holds more than one matching block, the last one is
+      // the most recently rendered (current game).
+      const matches = [...scope.querySelectorAll("style")].filter((s) =>
+        COVER_RE.test(s.textContent)
+      );
+      const styleEl = matches[matches.length - 1];
+      const m = styleEl && styleEl.textContent.match(COVER_RE);
+      if (m && m[1]) return m[1];
+    }
+    const og = document.querySelector('meta[property="og:image"]');
+    return og && og.content ? og.content : "";
+  }
+
   async function scrapeGame(root) {
     const downloadLinks = parseAccordion(sectionByHeading(root, "GAME DOWNLOAD LINKS"));
     const patchDownloadLinks = parseAccordion(sectionByHeading(root, "PATCH DOWNLOAD LINKS"));
@@ -177,8 +206,6 @@
     const torrentEl = root.querySelector('a[href^="magnet:"]');
     const gogdbEl = root.querySelector('a[href*="gogdb.org"]');
     const gogEl = root.querySelector('a[href*="gog.com/game"]');
-    const ogImage = document.querySelector('meta[property="og:image"]');
-    const metaDesc = document.querySelector('meta[name="description"]');
 
     return {
       slug: slugFromUrl(),
@@ -203,8 +230,7 @@
       extraDownloadLinks,
       installers,
       extras,
-      coverImage: ogImage ? ogImage.content : "",
-      description: metaDesc ? metaDesc.content : "",
+      coverImage: getCoverImage(root),
       savedAt: new Date().toISOString(),
     };
   }
@@ -228,6 +254,18 @@
 
   // ---- button ----------------------------------------------------------------
 
+  // True once the extension has been reloaded/updated while this page stayed
+  // open — the content script is orphaned and any chrome.* call throws
+  // "Extension context invalidated". The only cure is reloading the page.
+  function contextInvalidated(err) {
+    if (err && /context invalidated|Extension context/i.test(err.message)) return true;
+    try {
+      return !ext.runtime || !ext.runtime.id;
+    } catch (e) {
+      return true;
+    }
+  }
+
   function makeButton() {
     const btn = document.createElement("button");
     btn.id = BTN_ID;
@@ -247,8 +285,14 @@
         btn.textContent = `✓ Saved (${count} total)`;
         btn.classList.add("ggs-saved");
       } catch (err) {
-        btn.textContent = "⚠ " + err.message;
         btn.classList.add("ggs-error");
+        if (contextInvalidated(err)) {
+          btn.textContent = "↻ Refresh page (extension updated)";
+          btn.title = "The extension was reloaded; refresh this page (F5), then save.";
+          btn.onclick = () => location.reload();
+        } else {
+          btn.textContent = "⚠ " + err.message;
+        }
       }
     });
     return btn;

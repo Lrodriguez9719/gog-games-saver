@@ -166,18 +166,24 @@
 
   // ---- rendering -------------------------------------------------------------
 
+  // The site renders a literal "None" for missing rating/date/ranking; treat
+  // that (and empty) as absent so we don't show "★ None  None".
+  const clean = (v) => (v == null || v === "" || v === "None" ? "" : v);
+
   function statusBadge(status) {
     if (!status) return null;
     const out = /out/i.test(status);
     return el("span", { class: `badge ${out ? "out" : "up"}`, text: status });
   }
 
+  // Safe CSS url() for an image string (these are clean https URLs; just guard quotes).
+  const cssUrl = (u) => `url("${String(u).replace(/["\\]/g, "")}")`;
+
   function card(g) {
-    const cover = el("div", {
-      class: "card-cover",
-      style: g.coverImage ? `background-image:url("${CSS.escape(g.coverImage)}")` : "",
-    });
-    if (!g.coverImage) {
+    const cover = el("div", { class: "card-cover" });
+    if (g.coverImage) {
+      cover.style.backgroundImage = cssUrl(g.coverImage);
+    } else {
       cover.append(el("span", { class: "initial", text: (g.title || "?")[0].toUpperCase() }));
     }
 
@@ -191,8 +197,8 @@
         el("div", { class: "card-title", text: g.title || g.slug }),
         el("div", { class: "card-sub" }, [
           statusBadge(g.status),
-          g.rating && el("span", { text: `★ ${g.rating}` }),
-          g.releaseDate && el("span", { text: g.releaseDate }),
+          clean(g.rating) && el("span", { text: `★ ${g.rating}` }),
+          clean(g.releaseDate) && el("span", { text: g.releaseDate }),
         ]),
         tags.length ? el("div", { class: "chips" }, tags) : null,
         el("div", { class: "card-foot" }, [
@@ -256,9 +262,9 @@
   function openModal(g) {
     const meta1 = el("div", { class: "meta-line" }, [
       statusBadge(g.status),
-      g.rating && el("span", { text: `★ ${g.rating}` }),
-      g.releaseDate && el("span", { text: `📅 ${g.releaseDate}` }),
-      g.ranking && el("span", { text: `🔥 ${g.ranking}` }),
+      clean(g.rating) && el("span", { text: `★ ${g.rating}` }),
+      clean(g.releaseDate) && el("span", { text: `📅 ${g.releaseDate}` }),
+      clean(g.ranking) && el("span", { text: `🔥 ${g.ranking}` }),
     ]);
     const meta2 = el("div", { class: "meta-line" }, [
       g.developer && el("span", { text: `⚙ ${g.developer}` }),
@@ -289,8 +295,12 @@
       ? el("div", { class: "chips" }, g.tags.map((t) => el("span", { class: "chip", text: t })))
       : null;
 
+    const banner = g.coverImage ? el("div", { class: "modal-cover" }) : null;
+    if (banner) banner.style.backgroundImage = cssUrl(g.coverImage);
+
     const body = el("div", {}, [
       el("button", { class: "modal-close", text: "✕", "data-close": "1" }),
+      banner,
       el("h2", { class: "modal-title", text: g.title || g.slug }),
       meta1,
       meta2,

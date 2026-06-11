@@ -172,6 +172,14 @@ code {
   font-size: 22px;
   cursor: pointer;
 }
+.modal-cover {
+  height: 200px;
+  margin: -6px -6px 14px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--panel-2);
+}
 .modal-title { font-size: 22px; font-weight: 800; margin: 0 8px 4px 0; }
 .meta-line { color: var(--muted); margin: 6px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .section { margin-top: 20px; }
